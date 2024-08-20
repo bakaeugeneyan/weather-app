@@ -11,6 +11,8 @@ interface RestApi {
 		@Query("latitude") latitude: Double,
 		@Query("longitude") longitude: Double,
 		@Query("current_weather") currentWeather: Boolean = true,
-		@Query("temperature_unit") temperatureUnit: String = "celsius"
+		@Query("temperature_unit") temperatureUnit: String = "celsius",
+		@Query("daily") daily: String = "temperature_2m_max,temperature_2m_min",
+		@Query("timezone") timezone: String = "auto"
 	): Response<WeatherResponse>
 }

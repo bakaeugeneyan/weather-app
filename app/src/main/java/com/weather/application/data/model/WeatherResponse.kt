@@ -8,6 +8,10 @@ data class WeatherResponse(
     val currentWeather: CurrentWeather,
     @SerializedName("current_weather_units")
     val currentWeatherUnits: CurrentWeatherUnits,
+    @SerializedName("daily")
+    val dailyWeather: DailyWeather,
+    @SerializedName("daily_units")
+    val dailyUnits: DailyUnits,
     @SerializedName("elevation")
     val elevation: Int,
     @SerializedName("generationtime_ms")
