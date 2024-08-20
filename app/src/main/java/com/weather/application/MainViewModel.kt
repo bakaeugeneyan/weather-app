@@ -1,6 +1,5 @@
 package com.weather.application
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.weather.application.data.remote.RestApiFlow
@@ -24,12 +23,10 @@ class MainViewModel(
 
     fun getWeather(latitude: Double, longitude: Double) {
         viewModelScope.launch {
-            Log.d("MainViewModel", "Fetching weather data for lat: $latitude, long: $longitude")
 
             repository.getWeatherInBothUnits(latitude, longitude)
                 .flowOn(Dispatchers.IO)
                 .onStart {
-                    Log.d("MainViewModel", "Starting weather data fetch")
                     _uiState.update { currentState ->
                         currentState.copy(
                             isLoading = true,
@@ -38,16 +35,13 @@ class MainViewModel(
                     }
                 }
                 .onCompletion {
-                    Log.d("MainViewModel", "Completed weather data fetch")
                     _uiState.update { currentState -> currentState.copy(isLoading = false) }
                 }
                 .catch {
                     val errorMsg = Retrofit2.ErrorResponseHandling.exceptionHandling(it)
-                    Log.e("MainViewModel", "Error fetching weather data: $errorMsg")
                     _uiState.update { currentState -> currentState.copy(errorMsg = errorMsg) }
                 }
                 .collect { (celsiusResponse, fahrenheitResponse) ->
-                    Log.d("MainViewModel", "Received weather data")
 
                     if (celsiusResponse.isSuccessful && fahrenheitResponse.isSuccessful) {
                         val weatherCelsius = celsiusResponse.body()!!
@@ -55,7 +49,7 @@ class MainViewModel(
                         val currentTime = weatherCelsius.currentWeather.time
                         val dailyWeather = weatherFahrenheit.dailyWeather
 
-                        // Update the UI state with both temperatures
+                        // Update the UI state
                         _uiState.update { currentState ->
                             currentState.copy(
                                 temperatureCelsius = weatherCelsius.currentWeatherUnits.temperature,
@@ -66,7 +60,6 @@ class MainViewModel(
                         }
                     } else {
                         val errorMsg = "Error fetching weather data"
-                        Log.e("MainViewModel", errorMsg)
                         _uiState.update { currentState -> currentState.copy(errorMsg = errorMsg) }
                     }
                 }

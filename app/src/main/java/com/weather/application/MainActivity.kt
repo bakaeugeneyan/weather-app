@@ -30,140 +30,125 @@ import com.google.android.gms.tasks.Task
 import com.weather.application.ui.theme.WeatherApplicationTheme
 
 class MainActivity : ComponentActivity() {
-	private lateinit var fusedLocationClient: FusedLocationProviderClient
-	private val REQUEST_LOCATION_PERMISSION = 1
-	
-	private val viewModel: MainViewModel by viewModels()
-	
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
-		
-		fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-		requestLocationPermission()
-		
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private val REQUEST_LOCATION_PERMISSION = 1
 
-		setContent {
-			WeatherApplicationTheme {
-				// A surface container using the 'background' color from the theme
-				Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-					MainScreen()
-				}
-			}
-		}
-	}
-	
-	private fun requestLocationPermission() {
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-			!= PackageManager.PERMISSION_GRANTED) {
-			
-			ActivityCompat.requestPermissions(
-				this,
-				arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-				REQUEST_LOCATION_PERMISSION
-			)
-		} else {
-//			getCurrentLocation()
-			checkLocationServices()
-		}
-	}
-	
-	override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-		
-		if (requestCode == REQUEST_LOCATION_PERMISSION) {
-			
-			Log.d("qweqwe", "grantResults.isNotEmpty(): ${grantResults.isNotEmpty()}")
-			Log.d("qweqwe", "grantResults[0]: ${grantResults.joinToString()}")
-			Log.d("qweqwe", "PackageManager.PERMISSION_GRANTED: ${PackageManager.PERMISSION_GRANTED}")
-			
-			if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-				// Permission granted, get the location
-//				getCurrentLocation()
-				checkLocationServices()
-			} else {
-				// Permission denied, show a message to the user
-				Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
-			}
-		}
-	}
-	
-	private fun checkLocationServices() {
-		val locationRequest = LocationRequest.create().apply {
-			priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-		}
-		val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-		val client = LocationServices.getSettingsClient(this)
-		val task = client.checkLocationSettings(builder.build())
-		
-		task.addOnSuccessListener {
-			// All location settings are satisfied
-			getCurrentLocation()
-		}.addOnFailureListener { e ->
-			if (e is ResolvableApiException) {
-				// Location settings are not satisfied, but this can be fixed by showing the user a dialog
-				try {
-					e.startResolutionForResult(this, REQUEST_LOCATION_PERMISSION)
-				} catch (sendIntentException: IntentSender.SendIntentException) {
-					// PendingIntent unable to execute request
-				}
-			}
-		}
-	}
-	
-//	private fun getCurrentLocation() {
-//		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-//			== PackageManager.PERMISSION_GRANTED) {
-//
-//			val locationTask: Task<Location> = fusedLocationClient.lastLocation
-//
-//			locationTask.addOnSuccessListener { location ->
-//				if (location != null) {
-//					val latitude = location.latitude
-//					val longitude = location.longitude
-//
-//					Log.d("qweqwe", "latitude: $latitude")
-//					Log.d("qweqwe", "longitude: $longitude")
-//					viewModel.getWeather(latitude, longitude)
-//				} else {
-//					Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show()
-//				}
-//			}.addOnFailureListener {
-//				Toast.makeText(this, "Failed to retrieve location", Toast.LENGTH_SHORT).show()
-//			}
-//		}
-//	}
-	
-	private fun getCurrentLocation() {
-		if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-			== PackageManager.PERMISSION_GRANTED) {
-			
-			val locationRequest = LocationRequest.create().apply {
-				priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-				interval = 10000 // 10 seconds
-				fastestInterval = 5000 // 5 seconds
-			}
-			val locationCallback = object : LocationCallback() {
-				override fun onLocationResult(locationResult: LocationResult) {
-					super.onLocationResult(locationResult)
-					
-					if (locationResult != null) {
-						val location = locationResult.lastLocation
-						if (location != null) {
-							val latitude = location.latitude
-							val longitude = location.longitude
-							
-							Log.d("Location", "latitude: $latitude")
-							Log.d("Location", "longitude: $longitude")
-							viewModel.getWeather(latitude, longitude)
-							fusedLocationClient.removeLocationUpdates(this)
-						}
-					} else {
-						Toast.makeText(this@MainActivity, "Unable to get location", Toast.LENGTH_SHORT).show()
-					}
-				}
-			}
-			fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-		}
-	}
-	
+    private val viewModel: MainViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        requestLocationPermission()
+
+        setContent {
+            WeatherApplicationTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    MainScreen()
+                }
+            }
+        }
+    }
+
+    private fun requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_LOCATION_PERMISSION
+            )
+        } else {
+            checkLocationServices()
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == REQUEST_LOCATION_PERMISSION) {
+
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, get the location
+                checkLocationServices()
+            } else {
+                // Permission denied, show a message to the user
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun checkLocationServices() {
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+        val client = LocationServices.getSettingsClient(this)
+        val task = client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            // All location settings are satisfied
+            getCurrentLocation()
+
+        }.addOnFailureListener { e ->
+            if (e is ResolvableApiException) {
+                // Location settings are not satisfied, but this can be fixed by showing the user a dialog
+                try {
+                    e.startResolutionForResult(this, REQUEST_LOCATION_PERMISSION)
+                } catch (sendIntentException: IntentSender.SendIntentException) {
+                }
+            }
+        }
+    }
+
+    private fun getCurrentLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            val locationRequest = LocationRequest.create().apply {
+                priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+                interval = 10000 // 10 seconds
+                fastestInterval = 5000 // 5 seconds
+            }
+            val locationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult) {
+                    super.onLocationResult(locationResult)
+
+                    if (locationResult != null) {
+                        val location = locationResult.lastLocation
+                        if (location != null) {
+                            val latitude = location.latitude
+                            val longitude = location.longitude
+
+                            viewModel.getWeather(latitude, longitude)
+                            fusedLocationClient.removeLocationUpdates(this)
+                        }
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Unable to get location",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            )
+        }
+    }
+
 }
